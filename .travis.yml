@@ -1,0 +1,21 @@
+sudo: required
+language: generic 
+services:
+  - docker
+
+before_install:
+  - docker build -t tijanasutara/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run -e CI=true tijanasutara/react-test npm run test -- --coverage
+
+after_success:
+  - docker build -t tijanasutara/multi-client ./client
+  - docker build -t tijanasutara/multi-nginx ./nginx
+  - docker build -t tijanasutara/multi-server ./server
+  - docker build -t tijanasutara/multi-worker ./worker
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  - docker push tijanasutara/multi-client
+  - docker push tijanasutara/multi-nginx
+  - docker push tijanasutara/multi-server
+  - docker push tijanasutara/multi-worker
